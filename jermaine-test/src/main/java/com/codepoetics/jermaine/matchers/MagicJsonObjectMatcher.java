@@ -10,8 +10,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,7 +21,7 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
                 new MagicJsonObjectMatcher());
     }
 
-    private final Map<String, Matcher<? super JsonNode>> matchers = new LinkedHashMap<>();
+    private final JsonObjectMatcher matcher = JsonTreeMatcher.isObject();
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -32,7 +30,7 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
         }
 
         if (method.getDeclaringClass().equals(Matcher.class) || method.getDeclaringClass().equals(SelfDescribing.class)) {
-            return method.invoke(JsonTreeMatcher.isObject(matchers), args);
+            return method.invoke(matcher, args);
         }
 
         addMatcher(method, args);
@@ -41,7 +39,11 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
 
     private void addMatcher(Method method, Object[] args) {
         String fieldName = fieldNameForMethod(method);
-        matchers.put(fieldName, jsonNodeMatcherFor(method.getGenericParameterTypes(), args));
+        if (null == args) {
+            matcher.withoutField(fieldName);
+        } else {
+            matcher.withField(fieldName, jsonNodeMatcherFor(method.getGenericParameterTypes(), args));
+        }
     }
 
     private String fieldNameForMethod(Method method) {
@@ -58,7 +60,5 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
         }
         return MatcherParameter.of(parameterTypes[0], args[0]).get();
     }
-
-
 
 }

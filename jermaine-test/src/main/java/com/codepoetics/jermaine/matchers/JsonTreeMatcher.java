@@ -6,9 +6,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.number.IsCloseTo;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -84,20 +82,24 @@ public final class JsonTreeMatcher {
     }
 
     public static JsonObjectMatcher isObject() {
-        return isObject(new HashMap<>());
-    }
-
-    public static JsonObjectMatcher isObject(Map<String, Matcher<? super JsonNode>> matchers) {
-        return new JsonObjectMatcher(matchers);
+        return new JsonObjectMatcher();
     }
 
     @SafeVarargs
     public static Matcher<JsonNode> isArray(Matcher<? super JsonNode>...matchers) {
-        return isArray(Matchers.contains(matchers));
+        return matchers.length == 0 ? isEmptyArray() : isArray(Matchers.contains(matchers));
+    }
+
+    public static Matcher<JsonNode> isEmptyArray() {
+        return LambdaMatcher.of(
+                node -> node.elements().hasNext(),
+                d -> d.appendText("is empty"),
+                (t, d) -> d.appendText("was not empty"),
+                equalTo(false));
     }
 
     public static Matcher<JsonNode> isArray(List<Matcher<? super JsonNode>> matchers) {
-        return isArray(Matchers.contains(matchers));
+        return matchers.size() == 0 ? isEmptyArray() : isArray(Matchers.contains(matchers));
     }
 
     public static Matcher<JsonNode> isArray(Matcher<Iterable<? extends JsonNode>> matcher) {

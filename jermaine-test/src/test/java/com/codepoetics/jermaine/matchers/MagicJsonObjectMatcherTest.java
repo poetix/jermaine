@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import static com.codepoetics.jermaine.matchers.MagicJsonObjectMatcherTest.PersonMatcher.aPerson;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -28,6 +29,8 @@ public class MagicJsonObjectMatcherTest {
         PersonMatcher withFriends(PersonMatcher...matchers);
         PersonMatcher withFriends(Matcher<Iterable<JsonNode>> matchers);
 
+        PersonMatcher withoutFriends();
+
         @JsonProperty("friends")
         PersonMatcher withTwoFriends(PersonMatcher firstFriend, Matcher<JsonNode> secondFriend);
     }
@@ -41,50 +44,52 @@ public class MagicJsonObjectMatcherTest {
                         " \"age\":42," +
                         " \"friends\": [" +
                         "    {\"name\":\"Shulamith Firestone\",\"age\":23}," +
-                        "    {\"name\":\"Kate Millett\",\"age\":35}" +
+                        "    {\"name\":\"Kate Millett\",\"age\":35,\"friends\":[]}" +
                         "  ]" +
                         "}");
     }
 
     @Test public void
     matches_with_varargs_of_matchers() {
-        assertThat(node, PersonMatcher.aPerson()
+        assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
                 .withAge(greaterThan(40))
                 .withFriends(
-                        PersonMatcher.aPerson()
+                        aPerson()
                                 .withName(containsString("Firestone"))
-                                .withAge(23),
-                        PersonMatcher.aPerson()
+                                .withAge(23)
+                                .withoutFriends(),
+                        aPerson()
                                 .withName("Kate Millett")
-                                .withAge(35)));
+                                .withAge(35)
+                                .withFriends()));
     }
 
 
     @Test public void
     matches_with_multiple_params() {
-        assertThat(node, PersonMatcher.aPerson()
+        assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
                 .withAge(greaterThan(40))
                 .withTwoFriends(
-                        PersonMatcher.aPerson()
+                        aPerson()
                                 .withName(containsString("Firestone"))
                                 .withAge(23),
-                        PersonMatcher.aPerson()
+                        aPerson()
                                 .withName("Kate Millett")
                                 .withAge(35)));
     }
 
     @Test public void
     matches_with_matcher_of_iterable() {
-        assertThat(node, PersonMatcher.aPerson()
+        assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
                 .withAge(greaterThan(40))
                 .withFriends(hasItems(
-                        PersonMatcher.aPerson()
+                        aPerson()
                                 .withName("Kate Millett")
                                 .withAge(35),
-                        PersonMatcher.aPerson()
+                        aPerson()
                                 .withName("Shulamith Firestone")
                                 .withAge(lessThan(30)))));
     }
