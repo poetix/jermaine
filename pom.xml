@@ -15,7 +15,7 @@
 
     <modules>
         <module>jermaine-test</module>
-        <module>jermaine-core</module>
+        <!--<module>jermaine-core</module>-->
     </modules>
 
     <dependencies>
