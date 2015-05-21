@@ -26,8 +26,9 @@ public class MagicJsonObjectMatcherTest {
         PersonMatcher withName(Matcher<String> matcher);
         PersonMatcher withAge(int expected);
         PersonMatcher withAge(Matcher<Integer> matcher);
+
+        @Unordered
         PersonMatcher withFriends(PersonMatcher...matchers);
-        PersonMatcher withFriends(Matcher<Iterable<JsonNode>> matchers);
         @Unordered
         PersonMatcher withNicknames(String...nicknames);
 
@@ -57,7 +58,6 @@ public class MagicJsonObjectMatcherTest {
         assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
                 .withAge(greaterThan(40))
-                .withNicknames("Rawkin' Dworkin", "Rolling Thunder")
                 .withFriends(
                         aPerson()
                                 .withName(containsString("Firestone"))
@@ -85,17 +85,18 @@ public class MagicJsonObjectMatcherTest {
     }
 
     @Test public void
-    matches_with_matcher_of_iterable() {
+    matches_unordered() {
         assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
+                .withNicknames("Rawkin' Dworkin", "Rolling Thunder")
                 .withAge(greaterThan(40))
-                .withFriends(hasItems(
+                .withFriends(
                         aPerson()
                                 .withName("Kate Millett")
                                 .withAge(35),
                         aPerson()
                                 .withName("Shulamith Firestone")
-                                .withAge(lessThan(30)))));
+                                .withAge(lessThan(30))));
     }
 
 }

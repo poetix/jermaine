@@ -67,7 +67,7 @@ final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
 
     private Matcher<? super JsonNode> getVarArgsMatcher() {
         List<Matcher<? super JsonNode>> varArgMatchers = Stream.of((Object[]) value)
-                .map(varArg -> MatcherParameter.of(rawType.getComponentType(), varArg, true).get())
+                .map(varArg -> MatcherParameter.of(rawType.getComponentType(), varArg, isOrdered).get())
                 .collect(Collectors.toList());
         return isOrdered
                 ? JsonTreeMatcher.isOrderedArray(varArgMatchers)
@@ -83,7 +83,10 @@ final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
 
         if (valueClass.equals(Iterable.class)) {
             if (rawTypeOf(firstTypeParameterOf(valueType)).equals(JsonNode.class)) {
-                return JsonTreeMatcher.isArray((Matcher<Iterable<? extends JsonNode>>) matcher);
+                Matcher<Iterable<? extends JsonNode>> iterableMatcher = (Matcher<Iterable<? extends JsonNode>>) matcher;
+                return isOrdered
+                        ? JsonTreeMatcher.isOrderedArray(iterableMatcher)
+                        : JsonTreeMatcher.isUnorderedArray(iterableMatcher);
             }
             throw new IllegalArgumentException("Don't yet know how to promote Matcher<Iterable<Foo>>");
         }

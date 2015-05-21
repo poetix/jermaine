@@ -6,6 +6,7 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.number.IsCloseTo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -92,7 +93,7 @@ public final class JsonTreeMatcher {
 
     @SafeVarargs
     public static Matcher<JsonNode> isUnorderedArray(Matcher<? super JsonNode>...matchers) {
-        return matchers.length == 0 ? isEmptyArray() : isArray(Matchers.containsInAnyOrder(matchers));
+        return matchers.length == 0 ? isEmptyArray() : isArray(ContainsNodes.inAnyOrder(matchers));
     }
 
     public static Matcher<JsonNode> isEmptyArray() {
@@ -107,11 +108,11 @@ public final class JsonTreeMatcher {
         return matchers.size() == 0 ? isEmptyArray() : isArray(Matchers.contains(matchers));
     }
 
-    public static Matcher<JsonNode> isUnorderedArray(List<Matcher<? super JsonNode>> matchers) {
-        return matchers.size() == 0 ? isEmptyArray() : isArray(Matchers.containsInAnyOrder(matchers));
+    public static Matcher<JsonNode> isUnorderedArray(Collection<Matcher<? super JsonNode>> matchers) {
+        return matchers.size() == 0 ? isEmptyArray() : isArray(ContainsNodes.inAnyOrder(matchers));
     }
 
-    public static Matcher<JsonNode> isArray(Matcher<Iterable<? extends JsonNode>> matcher) {
+    private static Matcher<JsonNode> isArray(Matcher<Iterable<? extends JsonNode>> matcher) {
         return matching(node -> node, matcher);
     }
 
