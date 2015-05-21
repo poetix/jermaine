@@ -28,6 +28,8 @@ public class MagicJsonObjectMatcherTest {
         PersonMatcher withAge(Matcher<Integer> matcher);
         PersonMatcher withFriends(PersonMatcher...matchers);
         PersonMatcher withFriends(Matcher<Iterable<JsonNode>> matchers);
+        @Unordered
+        PersonMatcher withNicknames(String...nicknames);
 
         PersonMatcher withoutFriends();
 
@@ -42,6 +44,7 @@ public class MagicJsonObjectMatcherTest {
         node = mapper.readTree(
                 "{\"name\":\"Andrea Dworkin\"," +
                         " \"age\":42," +
+                        " \"nicknames\":[\"Rolling Thunder\", \"Rawkin' Dworkin\"]," +
                         " \"friends\": [" +
                         "    {\"name\":\"Shulamith Firestone\",\"age\":23}," +
                         "    {\"name\":\"Kate Millett\",\"age\":35,\"friends\":[]}" +
@@ -54,6 +57,7 @@ public class MagicJsonObjectMatcherTest {
         assertThat(node, aPerson()
                 .withName("Andrea Dworkin")
                 .withAge(greaterThan(40))
+                .withNicknames("Rawkin' Dworkin", "Rolling Thunder")
                 .withFriends(
                         aPerson()
                                 .withName(containsString("Firestone"))

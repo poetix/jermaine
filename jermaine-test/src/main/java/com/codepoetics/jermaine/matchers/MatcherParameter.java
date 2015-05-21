@@ -6,17 +6,18 @@ import org.hamcrest.Matchers;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
 
-    public static MatcherParameter of(Type type, Object value) {
+    public static MatcherParameter of(Type type, Object value, boolean isOrdered) {
         if (rawTypeOf(type).equals(Object.class)) {
-            return new MatcherParameter(value.getClass(), value, value.getClass());
+            return new MatcherParameter(value.getClass(), value, value.getClass(), isOrdered);
         }
-        return new MatcherParameter(type, value, rawTypeOf(type));
+        return new MatcherParameter(type, value, rawTypeOf(type), isOrdered);
     }
 
     private static Class<?> rawTypeOf(Type parameterType) {
@@ -39,15 +40,17 @@ final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
                 .orElseThrow(() -> new IllegalArgumentException("Type " + type.getTypeName() + " does not extend Matcher"));
     }
 
-    private MatcherParameter(Type type, Object value, Class<?> rawType) {
+    private MatcherParameter(Type type, Object value, Class<?> rawType, boolean isOrdered) {
         this.type = type;
         this.value = value;
         this.rawType = rawType;
+        this.isOrdered = isOrdered;
     }
 
     private final Type type;
     private final Object value;
     private final Class<?> rawType;
+    private final boolean isOrdered;
 
     @Override
     public Matcher<? super JsonNode> get() {
@@ -63,10 +66,12 @@ final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
     }
 
     private Matcher<? super JsonNode> getVarArgsMatcher() {
-        Object[] varArgs = (Object[]) value;
-        return JsonTreeMatcher.isArray(Stream.of(varArgs)
-                .map(varArg -> MatcherParameter.of(rawType.getComponentType(), varArg).get())
-                .collect(Collectors.toList()));
+        List<Matcher<? super JsonNode>> varArgMatchers = Stream.of((Object[]) value)
+                .map(varArg -> MatcherParameter.of(rawType.getComponentType(), varArg, true).get())
+                .collect(Collectors.toList());
+        return isOrdered
+                ? JsonTreeMatcher.isOrderedArray(varArgMatchers)
+                : JsonTreeMatcher.isUnorderedArray(varArgMatchers);
     }
 
     private Matcher<? super JsonNode> getPromotedMatcher(Type valueType, Matcher<?> matcher) {

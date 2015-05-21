@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -39,10 +40,11 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
 
     private void addMatcher(Method method, Object[] args) {
         String fieldName = fieldNameForMethod(method);
+        boolean isOrdered = method.getAnnotation(Unordered.class) == null;
         if (null == args) {
             matcher.withoutField(fieldName);
         } else {
-            matcher.withField(fieldName, jsonNodeMatcherFor(method.getGenericParameterTypes(), args));
+            matcher.withField(fieldName, jsonNodeMatcherFor(method.getGenericParameterTypes(), args, isOrdered));
         }
     }
 
@@ -53,12 +55,15 @@ public class MagicJsonObjectMatcher implements InvocationHandler {
         return Name.of(method.getName()).withoutFirst().toCamelCase();
     }
 
-    private Matcher<? super JsonNode> jsonNodeMatcherFor(Type[] parameterTypes, Object[] args) {
+    private Matcher<? super JsonNode> jsonNodeMatcherFor(Type[] parameterTypes, Object[] args, boolean isOrdered) {
         if (parameterTypes.length > 1) {
-            return JsonTreeMatcher.isArray(IntStream.range(0, parameterTypes.length).mapToObj(i ->
-                    MatcherParameter.of(parameterTypes[i], args[i]).get()).collect(Collectors.toList()));
+            List<Matcher<? super JsonNode>> parameterMatchers = IntStream.range(0, parameterTypes.length).mapToObj(i ->
+                    MatcherParameter.of(parameterTypes[i], args[i], isOrdered).get()).collect(Collectors.toList());
+            return isOrdered
+                    ? JsonTreeMatcher.isOrderedArray(parameterMatchers)
+                    : JsonTreeMatcher.isUnorderedArray(parameterMatchers);
         }
-        return MatcherParameter.of(parameterTypes[0], args[0]).get();
+        return MatcherParameter.of(parameterTypes[0], args[0], isOrdered).get();
     }
 
 }

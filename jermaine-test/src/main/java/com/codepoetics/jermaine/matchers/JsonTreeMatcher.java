@@ -86,8 +86,13 @@ public final class JsonTreeMatcher {
     }
 
     @SafeVarargs
-    public static Matcher<JsonNode> isArray(Matcher<? super JsonNode>...matchers) {
+    public static Matcher<JsonNode> isOrderedArray(Matcher<? super JsonNode>...matchers) {
         return matchers.length == 0 ? isEmptyArray() : isArray(Matchers.contains(matchers));
+    }
+
+    @SafeVarargs
+    public static Matcher<JsonNode> isUnorderedArray(Matcher<? super JsonNode>...matchers) {
+        return matchers.length == 0 ? isEmptyArray() : isArray(Matchers.containsInAnyOrder(matchers));
     }
 
     public static Matcher<JsonNode> isEmptyArray() {
@@ -98,8 +103,12 @@ public final class JsonTreeMatcher {
                 equalTo(false));
     }
 
-    public static Matcher<JsonNode> isArray(List<Matcher<? super JsonNode>> matchers) {
+    public static Matcher<JsonNode> isOrderedArray(List<Matcher<? super JsonNode>> matchers) {
         return matchers.size() == 0 ? isEmptyArray() : isArray(Matchers.contains(matchers));
+    }
+
+    public static Matcher<JsonNode> isUnorderedArray(List<Matcher<? super JsonNode>> matchers) {
+        return matchers.size() == 0 ? isEmptyArray() : isArray(Matchers.containsInAnyOrder(matchers));
     }
 
     public static Matcher<JsonNode> isArray(Matcher<Iterable<? extends JsonNode>> matcher) {

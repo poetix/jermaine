@@ -22,7 +22,7 @@ public class JsonTreeMatcherTest {
 
         assertThat(node, JsonTreeMatcher.isObject()
                 .withField("list",
-                        JsonTreeMatcher.isArray(
+                        JsonTreeMatcher.isOrderedArray(
                                 JsonTreeMatcher.isText("foo"),
                                 JsonTreeMatcher.isInteger(12),
                                 JsonTreeMatcher.isLong(1000L),
@@ -37,7 +37,7 @@ public class JsonTreeMatcherTest {
     describes_expected_json() throws IOException {
         Matcher<JsonNode> matcher = JsonTreeMatcher.isObject()
                 .withField("list",
-                        JsonTreeMatcher.isArray(
+                        JsonTreeMatcher.isOrderedArray(
                                 JsonTreeMatcher.isText("foo"),
                                 JsonTreeMatcher.isInteger(12),
                                 JsonTreeMatcher.isLong(1000L),
