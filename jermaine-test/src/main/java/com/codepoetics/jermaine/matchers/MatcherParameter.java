@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -66,12 +67,23 @@ final class MatcherParameter implements Supplier<Matcher<? super JsonNode>> {
     }
 
     private Matcher<? super JsonNode> getVarArgsMatcher() {
-        List<Matcher<? super JsonNode>> varArgMatchers = Stream.of((Object[]) value)
+        List<Matcher<? super JsonNode>> varArgMatchers = Stream.of(toObjectArray(value))
                 .map(varArg -> MatcherParameter.of(rawType.getComponentType(), varArg, isOrdered).get())
                 .collect(Collectors.toList());
         return isOrdered
                 ? JsonTreeMatcher.isOrderedArray(varArgMatchers)
                 : JsonTreeMatcher.isUnorderedArray(varArgMatchers);
+    }
+
+    private Object[] toObjectArray(Object value) {
+        if (value instanceof Object[]) {
+            return (Object[]) value;
+        }
+        Object[] result = new Object[Array.getLength(value)];
+        for (int i = 0; i < Array.getLength(value); i ++) {
+            result[i] = Array.get(value, i);
+        }
+        return result;
     }
 
     private Matcher<? super JsonNode> getPromotedMatcher(Type valueType, Matcher<?> matcher) {
